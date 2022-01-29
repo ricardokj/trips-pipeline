@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="4"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="trips_db" is-template="false" allow-conns="true">
+</database>
+
+<schema name="public" layers="0" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<schema name="refined" layers="0" rect-visible="true" fill-color="#e1e1e1">
+	<role name="postgres"/>
+</schema>
+
+<schema name="raw_data" layers="0" rect-visible="true" fill-color="#e1e1e1">
+	<role name="postgres"/>
+</schema>
+
+<table name="regions" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="460" y="220"/>
+	<column name="id" not-null="true">
+		<type name="smallserial" length="0"/>
+	</column>
+	<column name="region">
+		<type name="varchar" length="0"/>
+	</column>
+	<constraint name="regions_id_pk" type="pk-constr" table="refined.regions">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<initial-data>
+<![CDATA[id•region⸣
+1•Hamburg⸣
+2•Prague⸣
+3•Turin]]>
+	</initial-data>
+</table>
+
+<table name="datasources" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="980" y="220"/>
+	<column name="id" not-null="true">
+		<type name="serial" length="0"/>
+	</column>
+	<column name="datasource" not-null="true">
+		<type name="varchar" length="0"/>
+	</column>
+	<constraint name="datasources_id_pk" type="pk-constr" table="refined.datasources">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<initial-data>
+<![CDATA[id•datasource⸣
+1•baba_car⸣
+2•bad_diesel_vehicles⸣
+3•cheap_mobile⸣
+4•funny_car⸣
+5•pt_search_app]]>
+	</initial-data>
+</table>
+
+<extension name="postgis">
+	<schema name="public"/>
+</extension>
+
+<table name="trips" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="720" y="400"/>
+	<column name="id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="region_id">
+		<type name="smallserial" length="0"/>
+	</column>
+	<column name="datasource_id">
+		<type name="serial" length="0"/>
+	</column>
+	<column name="datetime" not-null="true">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="origin" not-null="true">
+		<type name="geometry" length="0"/>
+	</column>
+	<column name="destination" not-null="true">
+		<type name="geometry" length="0"/>
+	</column>
+	<constraint name="pk_id_trips" type="pk-constr" table="refined.trips">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="raw_trips" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="raw_data"/>
+	<role name="postgres"/>
+	<appended-sql><![CDATA[CREATE TABLE raw_data."2012" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2012') TO ('2014');
+ALTER TABLE IF EXISTS raw_data."2012"   OWNER to postgres;
+
+CREATE TABLE raw_data."2014" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2014') TO ('2016');
+ALTER TABLE IF EXISTS raw_data."2014"   OWNER to postgres;
+
+CREATE TABLE raw_data."2016" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2016') TO ('2018');
+ALTER TABLE IF EXISTS raw_data."2016"   OWNER to postgres;
+
+CREATE TABLE raw_data."2018" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2018') TO ('2020');
+ALTER TABLE IF EXISTS raw_data."2018"   OWNER to postgres;
+
+CREATE TABLE raw_data."2020" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2020') TO ('2022');
+ALTER TABLE IF EXISTS raw_data."2020"   OWNER to postgres;]]></appended-sql>
+	<position x="60" y="240"/>
+	<column name="region">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="origin_coord">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="destination_coord">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="datetime">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="datasource">
+		<type name="varchar" length="0"/>
+	</column>
+	<partitioning type="RANGE">
+		<partitionkey>
+			<expression><![CDATA[date_part('year'::text, datetime)]]></expression>
+		</partitionkey>
+	</partitioning>
+</table>
+
+<constraint name="fk_id_region" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="refined.regions" table="refined.trips">
+	<columns names="region_id" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="fk_id_datasources" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="refined.datasources" table="refined.trips">
+	<columns names="datasource_id" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_trips_regions" type="relfk" layers="0"
+	 src-table="refined.trips"
+	 dst-table="refined.regions" reference-fk="fk_id_region"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_trips_datasources" type="relfk" layers="0"
+	 src-table="refined.trips"
+	 dst-table="refined.datasources" reference-fk="fk_id_datasources"
+	 src-required="false" dst-required="false"/>
+
+</dbmodel>

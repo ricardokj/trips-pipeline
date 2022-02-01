@@ -75,3 +75,6 @@ For orchestration, two alternatives:
 * An alternative to deal with many jobs with a cluster, Airflow Composer.
 
 ![GCP](misc/Google_Cloud_proposal.png "GCP")
+
+# Considerations
+* This pipeline considers there is only new rows comingo on the file trip.csv.

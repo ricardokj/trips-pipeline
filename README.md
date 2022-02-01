@@ -53,3 +53,6 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 
 # ERD
 ![erd](misc/ERD.png "erd")
+
+# ERD_v2 - No relationship
+![erd](misc/ERD_no_relationship.png "erd_v2")

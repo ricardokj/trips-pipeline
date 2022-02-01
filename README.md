@@ -43,8 +43,9 @@ docker-compose exec postgis bash /tmp/codes/import.sh
   *  Automated process built to import on-demand basis
 * Trips with similar origin, destination, and time of day should be grouped together.
   *  Created a view, considering a 2 km radius to similar coordinates for trips at the same hour.
+  *  *Creating this report as view was a problem because it's nothing scalable. I got some troubles when grouping regions by their intersection coordinates, I tried to use bounding box but with no success on the time I spent. It was the first time I used geo data types , it was so rewarding and challenging. My proposal is to persist this aggregate table by bounding box and insert it by a procedure when new data arises.
 * Develop a way to obtain the weekly average number of trips for an area, defined by a bounding box (given by coordinates) or by a region.
-  * Created a view grouped by region. The view could have a filter to select the last 12 months and to retrieve an up to date report.
+  * Created a view grouped by region. The view could have a filter to select the last 12 months to improve performance and to retrieve an up to date report.
 * Develop a way to inform the user about the status of the data ingestion without using a polling solution.
   * Created a solution which we can only know which part of process is running (importing file or inserting on table) and the time they spent. Not able to see the real time status of each part.
 * The solution should be scalable to 100 million entries. It is encouraged to simplify the data by a data model. Please add proof that the solution is scalable.

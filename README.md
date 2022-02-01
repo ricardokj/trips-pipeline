@@ -46,7 +46,7 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 * Develop a way to obtain the weekly average number of trips for an area, defined by a bounding box (given by coordinates) or by a region.
   * Created a view grouped by region. The view could have a filter to select the last 12 months and to retrieve an up to date report.
 * Develop a way to inform the user about the status of the data ingestion without using a polling solution.
-  * Not finished.
+  * Created a solution which we can only know which part of process is running (importing file or inserting on table) and the time they spent. Not able to see the real time status of each part.
 * The solution should be scalable to 100 million entries. It is encouraged to simplify the data by a data model. Please add proof that the solution is scalable.
 * Use a SQL database.
   * PostgreSQL used with PostGis extension.
@@ -57,4 +57,6 @@ This was the first attempt to model and ingesting data. Then I got in trouble to
 ![erd](misc/ERD.png "erd")
 
 # ERD_v2 - No relationship
+This was the last Data Model, changing from a raw layer to stage. The raw data wouldn't be persisted as the first model, also the primary key and reference to  refined table were dropped. This improved performance to load file and also to insert from staging table to refined one.
+
 ![erd](misc/ERD_no_relationship.png "erd_v2")

@@ -58,7 +58,7 @@ This was the first attempt to model and ingesting data. Then I got in trouble to
 ![erd](misc/ERD.png "erd")
 
 ## No relationship
-This was the last Data Model, changing from a raw layer to stage, saving storage and improving performance to load file and also to insert from staging table to refined one.
+This was the last Data Model, changing from a raw layer to stage. This change saves storage, improves performance to load file and also to insert from staging table to refined one.
 * The raw data won't be persisted as the first model, saving storage. 
 * The primary key and reference to refined table were dropped.
 * The stage table was changed to unlogged table.

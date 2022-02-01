@@ -51,7 +51,9 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 * Use a SQL database.
   * PostgreSQL used with PostGis extension.
 
-# ERD
+# ERD - First Data Model
+This was the first attempt to model and ingesting data. Then I got in trouble to insert data once there isn't datasource/region id inside the file and I'd have to join on a string compare. Also, the primary key on raw table plus its reference to refined table, made the performance goes down.
+
 ![erd](misc/ERD.png "erd")
 
 # ERD_v2 - No relationship

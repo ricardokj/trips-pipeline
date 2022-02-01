@@ -1,2 +1,4 @@
 others
 .ipynb_checkpoints
+.processed/*
+README.md

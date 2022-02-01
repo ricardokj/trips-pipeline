@@ -16,7 +16,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=trips_db
     volumes:
-      - ./codes/script_by_pgmodeler.sql:/docker-entrypoint-initdb.d/script_by_pgmodeler.sql
+      - ./codes/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./codes:/tmp/codes
       - ./input_file:/tmp/files
 

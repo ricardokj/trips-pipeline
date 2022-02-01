@@ -33,10 +33,10 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 * http://localhost:16543
 * Login on pgAdmin4 page: postgres@gmail.com
 * Password on pgAdmin4 page: postgres
-* Create a connection using 
- * Hostname: postgis
- * User:postgres
- * Password:postgres
+* Add a new server using:
+  * Hostname: postgis
+  * User:postgres
+  * Password:postgres
 
 ## Features
 * There must be an automated process to ingest and store the data.

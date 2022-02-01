@@ -1,14 +1,14 @@
 version: '3.8'
 services:
   postgis:
+    container_name: trips-pipeline-container
     image: "postgis/postgis:11-2.5-alpine"
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres" ]
       timeout: 45s
       interval: 10s
-      retries: 10  
+      retries: 10
     restart: always  
-    container_name: postgis
     ports:
       - "5439:5432"
     environment:
@@ -32,7 +32,7 @@ services:
 #     ports:
 #       - "16543:80"
 #     depends_on:
-#       - db-postgres
+#       - trips-pipeline-container
 #     networks:
 #       - postgres-compose-network
 

@@ -19,23 +19,22 @@ services:
       - ./codes/script_by_pgmodeler.sql:/docker-entrypoint-initdb.d/script_by_pgmodeler.sql
       - ./codes:/tmp/codes
       - ./input_file:/tmp/files
-      #- ./db_data:/var/lib/postgresql/data
 
-#     networks:
-#       - postgres-compose-network
+    networks:
+      - postgres-compose-network
   
-#   pgadmin-compose:
-#     image: dpage/pgadmin4
-#     environment:
-#       PGADMIN_DEFAULT_EMAIL: "postgres@gmail.com"
-#       PGADMIN_DEFAULT_PASSWORD: "postgres"
-#     ports:
-#       - "16543:80"
-#     depends_on:
-#       - trips-pipeline-container
-#     networks:
-#       - postgres-compose-network
+  pgadmin-compose:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "postgres@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "postgres"
+    ports:
+      - "16543:80"
+    depends_on:
+      - trips-pipeline-container
+    networks:
+      - postgres-compose-network
 
-# networks: 
-#   postgres-compose-network:
-#     driver: bridge
+networks: 
+  postgres-compose-network:
+    driver: bridge

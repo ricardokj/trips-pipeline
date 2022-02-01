@@ -30,46 +30,6 @@ ALTER SCHEMA raw_data OWNER TO postgres;
 SET search_path TO pg_catalog,public,refined,raw_data;
 -- ddl-end --
 
--- object: refined.regions | type: TABLE --
--- DROP TABLE IF EXISTS refined.regions CASCADE;
-CREATE TABLE refined.regions (
-	id serial NOT NULL,
-	region varchar NOT NULL,
-	CONSTRAINT regions_id_pk PRIMARY KEY (id)
-);
--- ddl-end --
-ALTER TABLE refined.regions OWNER TO postgres;
--- ddl-end --
-
-INSERT INTO refined.regions (id, region) VALUES (E'1', E'Hamburg');
--- ddl-end --
-INSERT INTO refined.regions (id, region) VALUES (E'2', E'Prague');
--- ddl-end --
-INSERT INTO refined.regions (id, region) VALUES (E'3', E'Turin');
--- ddl-end --
-
--- object: refined.datasources | type: TABLE --
--- DROP TABLE IF EXISTS refined.datasources CASCADE;
-CREATE TABLE refined.datasources (
-	id serial NOT NULL,
-	datasource varchar NOT NULL,
-	CONSTRAINT datasources_id_pk PRIMARY KEY (id)
-);
--- ddl-end --
-ALTER TABLE refined.datasources OWNER TO postgres;
--- ddl-end --
-
-INSERT INTO refined.datasources (id, datasource) VALUES (E'1', E'baba_car');
--- ddl-end --
-INSERT INTO refined.datasources (id, datasource) VALUES (E'2', E'bad_diesel_vehicles');
--- ddl-end --
-INSERT INTO refined.datasources (id, datasource) VALUES (E'3', E'cheap_mobile');
--- ddl-end --
-INSERT INTO refined.datasources (id, datasource) VALUES (E'4', E'funny_car');
--- ddl-end --
-INSERT INTO refined.datasources (id, datasource) VALUES (E'5', E'pt_search_app');
--- ddl-end --
-
 -- object: postgis | type: EXTENSION --
 DROP EXTENSION IF EXISTS postgis CASCADE;
 CREATE EXTENSION postgis
@@ -81,9 +41,9 @@ WITH SCHEMA public;
 CREATE TABLE refined.trips (
 	trip_id bigserial NOT NULL,
 	raw_id bigserial NOT NULL,
-	region_id serial NOT NULL,
-	datasource_id serial NOT NULL,
 	datetime timestamp,
+	region varchar NOT NULL,
+	datasource varchar NOT NULL,
 	origin_coord geography,
 	destination_coord geography,
 	CONSTRAINT pk_id_trips PRIMARY KEY (trip_id)
@@ -116,14 +76,14 @@ ALTER TABLE raw_data.raw_trips OWNER TO postgres;
 CREATE VIEW refined.weekly_avg_trip
 AS 
 
-SELECT week_of_year_by_region.region_id,
+SELECT week_of_year_by_region.region,
     round(avg(week_of_year_by_region.count), 2) AS weekly_avg_trips
    FROM ( SELECT count(*) AS count,
             date_trunc('WEEK'::text, trips.datetime) AS week_of_year,
-            trips.region_id
+            trips.region
            FROM refined.trips
-          GROUP BY (date_trunc('WEEK'::text, trips.datetime)), trips.region_id) week_of_year_by_region
-  GROUP BY week_of_year_by_region.region_id;
+          GROUP BY (date_trunc('WEEK'::text, trips.datetime)), trips.region) week_of_year_by_region
+  GROUP BY week_of_year_by_region.region;
 -- ddl-end --
 ALTER VIEW refined.weekly_avg_trip OWNER TO postgres;
 -- ddl-end --
@@ -135,19 +95,15 @@ CREATE PROCEDURE refined.load_refined_trips ()
 	SECURITY INVOKER
 	AS $$
 INSERT INTO refined.trips
-	(raw_id, region_id, datasource_id, datetime, origin_coord, destination_coord)
+	(raw_id, region, datasource, datetime, origin_coord, destination_coord)
 SELECT 
- 	 raw.id
-	,r.id as region_id
-	,ds.id as datasource_id
-	,raw.datetime
-	,ST_GeogFromText('SRID=4326;'||raw.origin_coord)
-	,ST_GeogFromText('SRID=4326;'||raw.destination_coord)
+ 	 id
+	,region
+	,datasource
+	,datetime
+	,ST_GeogFromText('SRID=4326;'||origin_coord)
+	,ST_GeogFromText('SRID=4326;'||destination_coord)
 FROM raw_data.raw_trips raw
-	JOIN refined.regions r
-		ON raw.region = r.region
-	JOIN refined.datasources ds
-		ON raw.datasource = ds.datasource
 -- Only new rows from raw data.	
 WHERE NOT EXISTS
 		(SELECT 1
@@ -163,52 +119,27 @@ ALTER PROCEDURE refined.load_refined_trips() OWNER TO postgres;
 CREATE VIEW refined.similar_trips
 AS 
 
--- Creating coordinate radius to find near coordinates.
-with trip_radius as (
-SELECT 
- 	 rt.trip_id
-	,r.id as region_id
-	,cast(extract(hour from rt.datetime) as smallint) as hour_of_day
-	,ST_Transform(geometry(ST_Buffer(rt.origin_coord,2000)),4326) as  origin_radius
-	,ST_Transform(geometry(ST_Buffer(rt.destination_coord,2000)),4326) as  destination_radius
-	,rt.origin_coord
-	,rt.destination_coord
-FROM refined.trips rt 
-	JOIN refined.regions r
-		ON rt.region_id = r.id
-	)
--- Grouping similar origin, destination, and same hour of day.
-select 
- a.trip_id
-,a.region_id
-,a.hour_of_day
-,cast(count(*) over (partition by a.region_id,a.hour_of_day) as int) as trips_count
-,ST_Centroid(ST_MakeLine(a.origin_coord::geometry) over (partition by a.region_id,a.hour_of_day) ) AS origin_centroid
-,ST_Centroid(ST_MakeLine(a.destination_coord::geometry) over (partition by a.region_id,a.hour_of_day)) AS destination_centroid	
-	
-from trip_radius a, trip_radius b
-where 
-	(
-		(a.origin_radius && b.origin_radius and a.origin_coord != b.origin_coord)
-	and	(a.destination_radius && b.destination_radius and a.destination_coord != b.destination_coord)
-	and (a.hour_of_day = b.hour_of_day) 
-	);
+WITH trip_radius AS (
+         SELECT DISTINCT trips.trip_id,
+            trips.region,
+            (date_part('hour'::text, trips.datetime))::smallint AS hour_of_day,
+            st_transform(geometry(st_buffer(trips.origin_coord, (2000)::double precision)), 4326) AS origin_radius,
+            st_transform(geometry(st_buffer(trips.destination_coord, (2000)::double precision)), 4326) AS destination_radius,
+            trips.origin_coord,
+            trips.destination_coord
+           FROM refined.trips
+        )
+ SELECT DISTINCT a.trip_id,
+    a.region,
+    a.hour_of_day,
+    (count(*) OVER (PARTITION BY a.region, a.hour_of_day))::integer AS trips_count,
+    st_centroid(st_makeline((a.origin_coord)::geometry) OVER (PARTITION BY a.region, a.hour_of_day)) AS origin_centroid,
+    st_centroid(st_makeline((a.destination_coord)::geometry) OVER (PARTITION BY a.region, a.hour_of_day)) AS destination_centroid
+   FROM trip_radius a,
+    trip_radius b
+  WHERE ((a.origin_radius && b.origin_radius) AND ((a.origin_coord)::bytea <> (b.origin_coord)::bytea) AND ((a.destination_radius && b.destination_radius) AND ((a.destination_coord)::bytea <> (b.destination_coord)::bytea)) AND (a.hour_of_day = b.hour_of_day));
 -- ddl-end --
 ALTER VIEW refined.similar_trips OWNER TO postgres;
--- ddl-end --
-
--- object: fk_trips_id_region | type: CONSTRAINT --
--- ALTER TABLE refined.trips DROP CONSTRAINT IF EXISTS fk_trips_id_region CASCADE;
-ALTER TABLE refined.trips ADD CONSTRAINT fk_trips_id_region FOREIGN KEY (region_id)
-REFERENCES refined.regions (id) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
--- ddl-end --
-
--- object: fk_datasource_id | type: CONSTRAINT --
--- ALTER TABLE refined.trips DROP CONSTRAINT IF EXISTS fk_datasource_id CASCADE;
-ALTER TABLE refined.trips ADD CONSTRAINT fk_datasource_id FOREIGN KEY (datasource_id)
-REFERENCES refined.datasources (id) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --
 
 -- object: fk_raw_id | type: CONSTRAINT --

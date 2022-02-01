@@ -1,0 +1,5 @@
+-- object: trips_db | type: DATABASE --
+-- DROP DATABASE IF EXISTS trips_db;
+-- CREATE DATABASE trips_db;
+-- ddl-end --
+-- The db is created by docker image.

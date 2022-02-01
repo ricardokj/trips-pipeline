@@ -3,17 +3,19 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="4"
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,52" last-zoom="0.9" max-obj-count="7"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
 	 layer-name-colors="#000000"
 	 layer-rect-colors="#b4b4b4"
 	 show-layer-names="false" show-layer-rects="false">
-<database name="trips_db" is-template="false" allow-conns="true">
+<database name="trips_db" encoding="UTF8" lc-collate="en_US.UTF-8" lc-ctype="en_US.UTF-8" is-template="false" allow-conns="true">
+	<role name="postgres"/>
+	<tablespace name="pg_default"/>
 </database>
 
-<schema name="public" layers="0" fill-color="#e1e1e1" sql-disabled="true">
+<schema name="public" layers="0" rect-visible="true" fill-color="#e1e1e1" sql-disabled="true">
 </schema>
 
 <schema name="refined" layers="0" rect-visible="true" fill-color="#e1e1e1">
@@ -27,11 +29,11 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="regions" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
 	<schema name="refined"/>
 	<role name="postgres"/>
-	<position x="460" y="220"/>
+	<position x="1160" y="160"/>
 	<column name="id" not-null="true">
-		<type name="smallserial" length="0"/>
+		<type name="serial" length="0"/>
 	</column>
-	<column name="region">
+	<column name="region" not-null="true">
 		<type name="varchar" length="0"/>
 	</column>
 	<constraint name="regions_id_pk" type="pk-constr" table="refined.regions">
@@ -48,7 +50,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="datasources" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
 	<schema name="refined"/>
 	<role name="postgres"/>
-	<position x="980" y="220"/>
+	<position x="620" y="160"/>
 	<column name="id" not-null="true">
 		<type name="serial" length="0"/>
 	</column>
@@ -72,51 +74,45 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 </extension>
 
-<table name="trips" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+<table name="trips" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="refined"/>
 	<role name="postgres"/>
-	<position x="720" y="400"/>
-	<column name="id" not-null="true">
+	<position x="860" y="380"/>
+	<column name="trip_id" not-null="true">
 		<type name="bigserial" length="0"/>
 	</column>
-	<column name="region_id">
-		<type name="smallserial" length="0"/>
+	<column name="raw_id" not-null="true">
+		<type name="bigserial" length="0"/>
 	</column>
-	<column name="datasource_id">
+	<column name="region_id" not-null="true">
 		<type name="serial" length="0"/>
 	</column>
-	<column name="datetime" not-null="true">
+	<column name="datasource_id" not-null="true">
+		<type name="serial" length="0"/>
+	</column>
+	<column name="datetime">
 		<type name="timestamp" length="0"/>
 	</column>
-	<column name="origin" not-null="true">
-		<type name="geometry" length="0"/>
+	<column name="origin_coord">
+		<type name="geography" length="0"/>
+		<comment><![CDATA[Origin coordinates or centroid of coordinates when the trips are grouped.]]></comment>
 	</column>
-	<column name="destination" not-null="true">
-		<type name="geometry" length="0"/>
+	<column name="destination_coord">
+		<type name="geography" length="0"/>
+		<comment><![CDATA[Origin coordinates or centroid of coordinates when the trips are grouped.]]></comment>
 	</column>
 	<constraint name="pk_id_trips" type="pk-constr" table="refined.trips">
-		<columns names="id" ref-type="src-columns"/>
+		<columns names="trip_id" ref-type="src-columns"/>
 	</constraint>
 </table>
 
-<table name="raw_trips" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+<table name="raw_trips" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="raw_data"/>
 	<role name="postgres"/>
-	<appended-sql><![CDATA[CREATE TABLE raw_data."2012" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2012') TO ('2014');
-ALTER TABLE IF EXISTS raw_data."2012"   OWNER to postgres;
-
-CREATE TABLE raw_data."2014" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2014') TO ('2016');
-ALTER TABLE IF EXISTS raw_data."2014"   OWNER to postgres;
-
-CREATE TABLE raw_data."2016" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2016') TO ('2018');
-ALTER TABLE IF EXISTS raw_data."2016"   OWNER to postgres;
-
-CREATE TABLE raw_data."2018" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2018') TO ('2020');
-ALTER TABLE IF EXISTS raw_data."2018"   OWNER to postgres;
-
-CREATE TABLE raw_data."2020" PARTITION OF raw_data.raw_trips FOR VALUES FROM ('2020') TO ('2022');
-ALTER TABLE IF EXISTS raw_data."2020"   OWNER to postgres;]]></appended-sql>
-	<position x="60" y="240"/>
+	<position x="220" y="380"/>
+	<column name="id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
 	<column name="region">
 		<type name="varchar" length="0"/>
 	</column>
@@ -132,33 +128,181 @@ ALTER TABLE IF EXISTS raw_data."2020"   OWNER to postgres;]]></appended-sql>
 	<column name="datasource">
 		<type name="varchar" length="0"/>
 	</column>
-	<partitioning type="RANGE">
-		<partitionkey>
-			<expression><![CDATA[date_part('year'::text, datetime)]]></expression>
-		</partitionkey>
-	</partitioning>
+	<constraint name="pk_raw_id" type="pk-constr" table="raw_data.raw_trips">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
 </table>
 
-<constraint name="fk_id_region" type="fk-constr" comparison-type="MATCH SIMPLE"
+<view name="weekly_avg_trip" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="580" y="740"/>
+	<reference>
+		<expression><![CDATA[ SELECT week_of_year_by_region.region_id,
+    round(avg(week_of_year_by_region.count), 2) AS weekly_avg_trips
+   FROM ( SELECT count(*) AS count,
+            date_trunc('WEEK'::text, trips.datetime) AS week_of_year,
+            trips.region_id
+           FROM refined.trips
+          GROUP BY (date_trunc('WEEK'::text, trips.datetime)), trips.region_id) week_of_year_by_region
+  GROUP BY week_of_year_by_region.region_id;]]></expression>
+	<column name="region">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="weekly_avg_trips">
+		<type name="numeric" length="0"/>
+	</column>
+		<reftable name="refined.trips"/>
+	</reference>
+</view>
+
+<relationship name="rel_weekly_avg_trip_trips" type="reltv" layers="0"
+	 src-table="refined.weekly_avg_trip"
+	 dst-table="refined.trips"
+	 src-required="false" dst-required="false"/>
+
+<procedure name="load_refined_trips" security-type="SECURITY INVOKER">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<language name="sql"/>
+	<definition><![CDATA[INSERT INTO refined.trips
+	(raw_id, region_id, datasource_id, datetime, origin_coord, destination_coord)
+SELECT 
+ 	 raw.id
+	,r.id as region_id
+	,ds.id as datasource_id
+	,raw.datetime
+	,ST_GeogFromText('SRID=4326;'||raw.origin_coord)
+	,ST_GeogFromText('SRID=4326;'||raw.destination_coord)
+FROM raw_data.raw_trips raw
+	JOIN refined.regions r
+		ON raw.region = r.region
+	JOIN refined.datasources ds
+		ON raw.datasource = ds.datasource
+-- Only new rows from raw data.	
+WHERE NOT EXISTS
+		(SELECT 1
+			FROM REFINED.TRIPS RT
+			WHERE RT.RAW_ID = RAW.ID)]]></definition>
+</procedure>
+
+<view name="similar_trips" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="1200" y="680"/>
+	<reference>
+		<expression><![CDATA[-- Creating coordinate radius to find near coordinates.
+with trip_radius as (
+SELECT 
+ 	 rt.trip_id
+	,r.id as region_id
+	,cast(extract(hour from rt.datetime) as smallint) as hour_of_day
+	,ST_Transform(geometry(ST_Buffer(rt.origin_coord,2000)),4326) as  origin_radius
+	,ST_Transform(geometry(ST_Buffer(rt.destination_coord,2000)),4326) as  destination_radius
+	,rt.origin_coord
+	,rt.destination_coord
+FROM refined.trips rt 
+	JOIN refined.regions r
+		ON rt.region_id = r.id
+	)
+-- Grouping similar origin, destination, and same hour of day.
+select 
+ a.trip_id
+,a.region_id
+,a.hour_of_day
+,cast(count(*) over (partition by a.region_id,a.hour_of_day) as int) as trips_count
+,ST_Centroid(ST_MakeLine(a.origin_coord::geometry) over (partition by a.region_id,a.hour_of_day) ) AS origin_centroid
+,ST_Centroid(ST_MakeLine(a.destination_coord::geometry) over (partition by a.region_id,a.hour_of_day)) AS destination_centroid	
+	
+from trip_radius a, trip_radius b
+where 
+	(
+		(a.origin_radius && b.origin_radius and a.origin_coord != b.origin_coord)
+	and	(a.destination_radius && b.destination_radius and a.destination_coord != b.destination_coord)
+	and (a.hour_of_day = b.hour_of_day) 
+	);]]></expression>
+	<column name="trip_id">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="region_id">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="hour_of_day">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="trips_count">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="origin_centroid">
+		<type name="geometry" length="0"/>
+	</column>
+	<column name="destination_centroid">
+		<type name="geometry" length="0"/>
+	</column>
+		<reftable name="refined.regions"/>
+		<reftable name="refined.trips"/>
+	</reference>
+</view>
+
+<relationship name="rel_similar_trips_regions" type="reltv" layers="0"
+	 src-table="refined.similar_trips"
+	 dst-table="refined.regions"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_similar_trips_trips" type="reltv" layers="0"
+	 src-table="refined.similar_trips"
+	 dst-table="refined.trips"
+	 src-required="false" dst-required="false"/>
+
+<constraint name="fk_trips_id_region" type="fk-constr" comparison-type="MATCH SIMPLE"
 	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="refined.regions" table="refined.trips">
 	<columns names="region_id" ref-type="src-columns"/>
 	<columns names="id" ref-type="dst-columns"/>
 </constraint>
 
-<constraint name="fk_id_datasources" type="fk-constr" comparison-type="MATCH SIMPLE"
+<constraint name="fk_datasource_id" type="fk-constr" comparison-type="MATCH SIMPLE"
 	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="refined.datasources" table="refined.trips">
 	<columns names="datasource_id" ref-type="src-columns"/>
 	<columns names="id" ref-type="dst-columns"/>
 </constraint>
 
+<constraint name="fk_raw_id" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="raw_data.raw_trips" table="refined.trips">
+	<columns names="raw_id" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
 <relationship name="rel_trips_regions" type="relfk" layers="0"
+	 custom-color="#6c8d3e"
 	 src-table="refined.trips"
-	 dst-table="refined.regions" reference-fk="fk_id_region"
-	 src-required="false" dst-required="false"/>
+	 dst-table="refined.regions" reference-fk="fk_trips_id_region"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="36.479" y="-48.8915"/>
+	</label>
+</relationship>
 
 <relationship name="rel_trips_datasources" type="relfk" layers="0"
 	 src-table="refined.trips"
-	 dst-table="refined.datasources" reference-fk="fk_id_datasources"
-	 src-required="false" dst-required="false"/>
+	 dst-table="refined.datasources" reference-fk="fk_datasource_id"
+	 src-required="false" dst-required="true">
+	<label ref-type="name-label">
+		<position x="69.6952" y="-11.3323"/>
+	</label>
+</relationship>
 
+<relationship name="rel_trips_raw_trips" type="relfk" layers="0"
+	 src-table="refined.trips"
+	 dst-table="raw_data.raw_trips" reference-fk="fk_raw_id"
+	 src-required="false" dst-required="true"/>
+
+<permission>
+	<object name="public" type="schema"/>
+	<roles names="postgres"/>
+	<privileges create="true" usage="true"/>
+</permission>
+<permission>
+	<object name="public" type="schema"/>
+	<privileges create="true" usage="true"/>
+</permission>
 </dbmodel>

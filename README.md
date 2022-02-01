@@ -67,7 +67,8 @@ This was the last Data Model, changing from a raw layer to stage. This change sa
 
 ## Google Cloud Platform Proposal
 Those would be the ways to the set up application using Google Cloud Platform. 
-Using Google Cloud Storage to store all sizes of files and BigQuery to efficiently process and store high scalable tables. The tables would be partitioned to improve performance and save costs.
+Using Google Cloud Storage to store any size of files and BigQuery to efficiently process and store high scalable tables. The tables would be partitioned to improve performance and save costs.
+
 For orchestration, two alternatives:
 * A cheap and simple alternative to deal with few jobs scenario: Google Cloud Function triggered by Google Cloud Storage Trigger.
 * An alternative to deal with many jobs with a cluster, Airflow Composer.

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,0" last-zoom="0.9" max-obj-count="4"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="trips_db" encoding="UTF8" lc-collate="en_US.UTF-8" lc-ctype="en_US.UTF-8" is-template="false" allow-conns="true">
+	<role name="postgres"/>
+	<tablespace name="pg_default"/>
+</database>
+
+<schema name="public" layers="0" rect-visible="true" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<schema name="refined" layers="0" rect-visible="true" fill-color="#e1e1e1">
+	<role name="postgres"/>
+</schema>
+
+<schema name="raw_data" layers="0" rect-visible="true" fill-color="#e1e1e1">
+	<role name="postgres"/>
+</schema>
+
+<extension name="postgis">
+	<schema name="public"/>
+</extension>
+
+<table name="trips" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="912.222" y="341.111"/>
+	<column name="trip_id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="raw_id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="datetime">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="region" not-null="true">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="datasource" not-null="true">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="origin_coord">
+		<type name="geography" length="0"/>
+		<comment><![CDATA[Origin coordinates or centroid of coordinates when the trips are grouped.]]></comment>
+	</column>
+	<column name="destination_coord">
+		<type name="geography" length="0"/>
+		<comment><![CDATA[Origin coordinates or centroid of coordinates when the trips are grouped.]]></comment>
+	</column>
+	<constraint name="pk_id_trips" type="pk-constr" table="refined.trips">
+		<columns names="trip_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="raw_trips" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="raw_data"/>
+	<role name="postgres"/>
+	<position x="322.115" y="263.333"/>
+	<column name="id" not-null="true">
+		<type name="bigserial" length="0"/>
+	</column>
+	<column name="region">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="origin_coord">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="destination_coord">
+		<type name="varchar" length="0"/>
+	</column>
+	<column name="datetime">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="datasource">
+		<type name="varchar" length="0"/>
+	</column>
+	<constraint name="pk_raw_id" type="pk-constr" table="raw_data.raw_trips">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<view name="weekly_avg_trip" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="685.337" y="141.111"/>
+	<reference>
+		<expression><![CDATA[ SELECT week_of_year_by_region.region,
+    round(avg(week_of_year_by_region.count), 2) AS weekly_avg_trips
+   FROM ( SELECT count(*) AS count,
+            date_trunc('WEEK'::text, trips.datetime) AS week_of_year,
+            trips.region
+           FROM refined.trips
+          GROUP BY (date_trunc('WEEK'::text, trips.datetime)), trips.region) week_of_year_by_region
+  GROUP BY week_of_year_by_region.region;]]></expression>
+	<column name="region">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="weekly_avg_trips">
+		<type name="numeric" length="0"/>
+	</column>
+		<reftable name="refined.trips"/>
+	</reference>
+</view>
+
+<relationship name="rel_weekly_avg_trip_trips" type="reltv" layers="0"
+	 src-table="refined.weekly_avg_trip"
+	 dst-table="refined.trips"
+	 src-required="false" dst-required="false"/>
+
+<procedure name="load_refined_trips" security-type="SECURITY INVOKER">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<language name="sql"/>
+	<definition><![CDATA[INSERT INTO refined.trips
+	(raw_id, region, datasource, datetime, origin_coord, destination_coord)
+SELECT 
+ 	 id
+	,region
+	,datasource
+	,datetime
+	,ST_GeogFromText('SRID=4326;'||origin_coord)
+	,ST_GeogFromText('SRID=4326;'||destination_coord)
+FROM raw_data.raw_trips raw
+-- Only new rows from raw data.	
+WHERE NOT EXISTS
+		(SELECT 1
+			FROM REFINED.TRIPS RT
+			WHERE RT.RAW_ID = RAW.ID)]]></definition>
+</procedure>
+
+<view name="similar_trips" layers="0" collapse-mode="2" max-obj-count="1" z-value="0">
+	<schema name="refined"/>
+	<role name="postgres"/>
+	<position x="1097.94" y="115.556"/>
+	<reference>
+		<expression><![CDATA[ WITH trip_radius AS (
+         SELECT DISTINCT trips.trip_id,
+            trips.region,
+            (date_part('hour'::text, trips.datetime))::smallint AS hour_of_day,
+            st_transform(geometry(st_buffer(trips.origin_coord, (2000)::double precision)), 4326) AS origin_radius,
+            st_transform(geometry(st_buffer(trips.destination_coord, (2000)::double precision)), 4326) AS destination_radius,
+            trips.origin_coord,
+            trips.destination_coord
+           FROM refined.trips
+        )
+ SELECT DISTINCT a.trip_id,
+    a.region,
+    a.hour_of_day,
+    (count(*) OVER (PARTITION BY a.region, a.hour_of_day))::integer AS trips_count,
+    st_centroid(st_makeline((a.origin_coord)::geometry) OVER (PARTITION BY a.region, a.hour_of_day)) AS origin_centroid,
+    st_centroid(st_makeline((a.destination_coord)::geometry) OVER (PARTITION BY a.region, a.hour_of_day)) AS destination_centroid
+   FROM trip_radius a,
+    trip_radius b
+  WHERE ((a.origin_radius && b.origin_radius) AND ((a.origin_coord)::bytea <> (b.origin_coord)::bytea) AND ((a.destination_radius && b.destination_radius) AND ((a.destination_coord)::bytea <> (b.destination_coord)::bytea)) AND (a.hour_of_day = b.hour_of_day));]]></expression>
+	<column name="trip_id">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="region">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="hour_of_day">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="trips_count">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="origin_centroid">
+		<type name="geometry" length="0"/>
+	</column>
+	<column name="destination_centroid">
+		<type name="geometry" length="0"/>
+	</column>
+		<reftable name="refined.trips"/>
+	</reference>
+</view>
+
+<relationship name="rel_similar_trips_trips" type="reltv" layers="0"
+	 src-table="refined.similar_trips"
+	 dst-table="refined.trips"
+	 src-required="false" dst-required="false"/>
+
+<constraint name="fk_raw_id" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="raw_data.raw_trips" table="refined.trips">
+	<columns names="raw_id" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_trips_raw_trips" type="relfk" layers="0"
+	 src-table="refined.trips"
+	 dst-table="raw_data.raw_trips" reference-fk="fk_raw_id"
+	 src-required="false" dst-required="true"/>
+
+<permission>
+	<object name="public" type="schema"/>
+	<roles names="postgres"/>
+	<privileges create="true" usage="true"/>
+</permission>
+<permission>
+	<object name="public" type="schema"/>
+	<privileges create="true" usage="true"/>
+</permission>
+</dbmodel>

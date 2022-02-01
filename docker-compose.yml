@@ -31,7 +31,7 @@ services:
     ports:
       - "16543:80"
     depends_on:
-      - trips-pipeline-container
+      - postgis
     networks:
       - postgres-compose-network
 

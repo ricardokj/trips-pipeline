@@ -88,8 +88,10 @@ This was the last Data Model, changing from a raw layer to stage. This change sa
 
 ### Second Data Model
 * File insert (copy statement): 6m22s
-* Insert into table: 
+* Insert into table: 26m
 ![2nd-model-time](misc/img/stg_data-2nd_model-ingestion_time.jpeg "2nd-model-time")
+
+Doing these changes, the ingestion time was from 117 minutes to 32 minutes.
 
 
 ## Generating 10mi rows file

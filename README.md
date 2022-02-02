@@ -56,7 +56,7 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 ## First Data Model
 This was the first attempt to model and ingesting data. Then I got in trouble to insert data once there isn't datasource/region id inside the file and I'd have to join on a string compare. Also, the primary key on raw table plus its reference to refined table, made the performance goes down.
 
-![erd](misc/ERD.png "erd")
+![erd](misc/img/ERD.png "erd")
 
 ## No relationship
 This was the last Data Model, changing from a raw layer to stage. This change saves storage, improves performance to load file and also to insert from staging table to refined one.
@@ -64,7 +64,7 @@ This was the last Data Model, changing from a raw layer to stage. This change sa
 * The primary key and reference to refined table were dropped.
 * The stage table was changed to unlogged table.
 
-![erd](misc/ERD_no_relationship.png "erd_v2")
+![erd](misc/img/ERD_no_relationship.png "erd_v2")
 
 ## Google Cloud Platform Proposal
 Those would be the ways to the set up application using Google Cloud Platform. 
@@ -74,7 +74,7 @@ For orchestration, two alternatives:
 * A cheap and simple alternative to deal with few jobs scenario: Google Cloud Function triggered by Google Cloud Storage Trigger.
 * An alternative to deal with many jobs with a cluster, Airflow Composer.
 
-![GCP](misc/Google_Cloud_proposal.png "GCP")
+![GCP](misc/img/Google_Cloud_proposal.png "GCP")
 
 # Considerations
 * This pipeline considers there is only new rows comingo on the file trip.csv.

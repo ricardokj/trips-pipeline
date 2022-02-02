@@ -79,6 +79,22 @@ This was the last Data Model, changing from a raw layer to stage. This change sa
 
 ![erd](misc/img/ERD_no_relationship.png "erd_v2")
 
+
+## Performance Comparison - 104.8 million entries
+### First Data Model
+* File insert (copy statement): 26m33s
+* Insert into table: 1h30m40s
+![1st-model-time](misc/img/raw_data-1st_model-ingestion_time.jpeg "1st-model-time")
+
+### Second Data Model
+* File insert (copy statement): 6m22s
+* Insert into table: 
+![2nd-model-time](misc/img/stg_data-2nd_model-ingestion_time.jpeg "2nd-model-time")
+
+
+## Generating 10mi rows file
+The 100mi csv file was genareted with this [jupyter-notebook](misc/csv_generator.ipynb "jupyter-notebook")
+
 ## Google Cloud Platform Proposal
 Those would be the ways to set up an application using Google Cloud Platform. 
 Using Google Cloud Storage to store any size of files and BigQuery to efficiently process and store high scalable tables. The tables would be partitioned to improve performance and save costs.

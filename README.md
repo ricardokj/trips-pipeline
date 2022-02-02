@@ -30,7 +30,7 @@ docker-compose exec postgis bash /tmp/codes/import.sh
 * `./codes/` - Code location
 * `./input_file/` - File location
 
-## Accessing pgAdmin4
+## Accessing pgAdmin4 (after docker environment building)
 * http://localhost:16543
 * Login on pgAdmin4 page: postgres@gmail.com
 * Password on pgAdmin4 page: postgres

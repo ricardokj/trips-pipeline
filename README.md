@@ -20,7 +20,8 @@ Build and run these images locally:
 ```shell
 docker-compose up
 ```
-#### Run script to import [trips.csv](https://github.com/ricardokj/trips-pipeline/blob/9dc2207846ba805cda480a5f83fe56de498c1158/input_file/trips.csv) file 
+#### Run script to import [trips.csv](https://github.com/ricardokj/trips-pipeline/blob/9dc2207846ba805cda480a5f83fe56de498c1158/input_file/trips.csv) file
+* After each run, the file will be moved to processed folder.
 ```shell
 docker-compose exec postgis bash /tmp/codes/import.sh
 ```

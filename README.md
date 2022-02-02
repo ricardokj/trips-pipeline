@@ -97,7 +97,7 @@ Computer properties that ran the tests:
 * Processor: Intel® Core™ i7-5500U CPU @ 2.40GHz × 4 
 * SSD
 * RAM: 16 GB
-* OS Name Ubuntu 21.04
+* OS Name: Ubuntu 21.04
 
 ## Generating 10mi rows file
 The 100mi csv file was genareted with this [jupyter-notebook](misc/csv_generator.ipynb "jupyter-notebook")

@@ -17,6 +17,7 @@ Build and run these images locally:
 * dpage/pgadmin4
 
 ### Building and starting containerized environment
+On project folder (./trips-pipeline): 
 ```shell
 docker-compose up
 ```
@@ -36,6 +37,8 @@ docker-compose up
 
 #### Run script to import [trips.csv](https://github.com/ricardokj/trips-pipeline/blob/9dc2207846ba805cda480a5f83fe56de498c1158/input_file/trips.csv) file
 * After each run, the file will be moved to processed folder.
+
+On project folder (./trips-pipeline): 
 ```shell
 docker-compose exec postgis bash /tmp/codes/import.sh
 ```
